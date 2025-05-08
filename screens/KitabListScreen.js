@@ -9,11 +9,18 @@ import {
   Image
 } from 'react-native';
 import axios from 'axios';
+import RenderHtml from "react-native-render-html";
+import { useWindowDimensions } from "react-native";
 
 export default function KitabListScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const [kitabList, setKitabList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // Tambahkan state untuk error
+  const stripHtmlTags = (html) => {
+    if (!html) return "Deskripsi belum tersedia.";
+    return html.replace(/<[^>]+>/g, "").trim();
+  };
 
   useEffect(() => {
     axios
@@ -37,16 +44,21 @@ export default function KitabListScreen({ navigation }) {
     <TouchableOpacity
       style={styles.card}
       onPress={() =>
-        navigation.navigate('DetailKitab', {
+        navigation.navigate("DetailKitab", {
           id: item?.id,
           kitab: item,
         })
       }
     >
       <Image source={{ uri: item.img_kitab }} style={styles.cardImage} />
-      <Text style={styles.cardTitle}>{item.nama_kitab_indo || 'Judul tidak tersedia'}</Text>
-      <Text style={styles.cardDesc} numberOfLines={2}>
-        {item.deskripsi_kitab || 'Deskripsi belum tersedia.'}
+      <Text style={styles.cardTitle}>
+        {item.nama_kitab_indo || "Judul tidak tersedia"}
+      </Text>
+      {/* <Text style={styles.cardDesc} numberOfLines={2}>
+        {item.deskripsi_kitab || "Deskripsi belum tersedia."}
+      </Text> */}
+      <Text style={styles.cardDesc} numberOfLines={2} ellipsizeMode="tail">
+        {stripHtmlTags(item.deskripsi_kitab)}
       </Text>
     </TouchableOpacity>
   );

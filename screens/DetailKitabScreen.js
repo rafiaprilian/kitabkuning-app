@@ -2,26 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Button, ScrollView, Image } from 'react-native';
 import axios from 'axios';
 import ImageSlider from 'react-native-image-slider'; // Pastikan untuk menginstal react-native-image-slider
+import RenderHtml from "react-native-render-html";
+import { useWindowDimensions } from "react-native";
 
 export default function DetailKitabScreen({ route, navigation }) {
   const { id, kitab } = route.params; // Dapatkan id dan kitab dari params
   const [kitabDetail, setKitabDetail] = useState(kitab || null); // Gunakan data dari params jika tersedia
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
-    if (id && !kitabDetail) { // Jika tidak ada data kitab yang sudah diambil
+    if (id && !kitabDetail) {
+      // Jika tidak ada data kitab yang sudah diambil
       axios
-        .get(`https://get.ichwanul.com/api/api.php/records/KitabKuningDigital/${id}?transform=1`)
-        .then(res => {
+        .get(
+          `https://get.ichwanul.com/api/api.php/records/KitabKuningDigital/${id}?transform=1`
+        )
+        .then((res) => {
           if (res.data) {
             setKitabDetail(res.data);
           } else {
-            setError('Data kitab tidak ditemukan');
+            setError("Data kitab tidak ditemukan");
           }
         })
-        .catch(err => {
-          setError('Terjadi kesalahan saat mengambil data');
+        .catch((err) => {
+          setError("Terjadi kesalahan saat mengambil data");
           console.error(err);
         })
         .finally(() => {
@@ -61,15 +67,39 @@ export default function DetailKitabScreen({ route, navigation }) {
                 autoPlayWithInterval={3000}
               />
             ) : (
-              <Image source={{ uri: kitabDetail.img_kitab }} style={styles.image} />
+              <Image
+                source={{ uri: kitabDetail.img_kitab }}
+                style={styles.image}
+              />
             )}
           </View>
 
-          <Text style={styles.title}>{kitabDetail.nama_kitab_indo || 'Judul Tidak Tersedia'}</Text>
-          <Text style={styles.arabTitle}>{kitabDetail.nama_kitab_arab || 'عنوان غير متوفر'}</Text>
-          <Text>{kitabDetail.deskripsi_kitab || 'Tidak ada deskripsi tersedia.'}</Text>
-          <Text style={styles.tag}>Tag: {kitabDetail.tag_kitab || 'Tidak ada tag'}</Text>
-          <Button title="Kembali ke Daftar Kitab" onPress={() => navigation.goBack()} />
+          <Text style={styles.title}>
+            {kitabDetail.nama_kitab_indo || "Judul Tidak Tersedia"}
+          </Text>
+          <Text style={styles.arabTitle}>
+            {kitabDetail.nama_kitab_arab || "عنوان غير متوفر"}
+          </Text>
+          <RenderHtml
+            contentWidth={width}
+            source={{
+              html:
+                kitabDetail.deskripsi_kitab || "Tidak ada deskripsi tersedia.",
+            }}
+          />
+
+          <Text style={styles.tag}>
+            Tag: {kitabDetail.tag_kitab || "Tidak ada tag"}
+          </Text>
+          <Button
+            title="Kembali ke Daftar Kitab"
+            onPress={() => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "KitabList" }],
+              });
+            }}
+          />
         </>
       ) : (
         <Text>Data tidak ditemukan</Text>
