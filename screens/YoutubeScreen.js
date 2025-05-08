@@ -16,6 +16,7 @@ export default function YoutubeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Mengambil data dari API
     axios
       .get('https://get.ichwanul.com/api/api.php/records/ChannelYoutube?transform=1', {
         headers: {
@@ -24,6 +25,7 @@ export default function YoutubeScreen({ navigation }) {
         },
       })
       .then((res) => {
+        // Jika berhasil, set data dari API
         setYoutubeList(res.data.records);
         setLoading(false);
       })
@@ -56,7 +58,7 @@ export default function YoutubeScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>📺 Channel Youtube</Text>
       <FlatList
-        data={youtubeList}
+        data={youtubeList} // Menampilkan semua data dari API
         renderItem={renderItem}
         keyExtractor={(item) => item.id_toko.toString()}
         contentContainerStyle={styles.listContainer}
