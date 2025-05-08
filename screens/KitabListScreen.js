@@ -5,23 +5,30 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import axios from 'axios';
 
 export default function KitabListScreen({ navigation }) {
   const [kitabList, setKitabList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Tambahkan state untuk error
 
   useEffect(() => {
     axios
       .get('https://get.ichwanul.com/api/api.php/records/KitabKuningDigital?transform=1')
       .then(res => {
-        setKitabList(res.data.records);
+        if (res.data && res.data.records) {
+          setKitabList(res.data.records);
+        } else {
+          setError('Data tidak ditemukan');
+        }
         setLoading(false);
       })
       .catch(err => {
         console.error(err);
+        setError('Terjadi kesalahan pada server atau API');
         setLoading(false);
       });
   }, []);
@@ -29,11 +36,17 @@ export default function KitabListScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => navigation.navigate('DetailKitab', { id: item.id, kitab: item })}
+      onPress={() =>
+        navigation.navigate('DetailKitab', {
+          id: item?.id,
+          kitab: item,
+        })
+      }
     >
-      <Text style={styles.cardTitle}>{item.judul}</Text>
+      <Image source={{ uri: item.img_kitab }} style={styles.cardImage} />
+      <Text style={styles.cardTitle}>{item.nama_kitab_indo || 'Judul tidak tersedia'}</Text>
       <Text style={styles.cardDesc} numberOfLines={2}>
-        {item.deskripsi || 'Deskripsi belum tersedia.'}
+        {item.deskripsi_kitab || 'Deskripsi belum tersedia.'}
       </Text>
     </TouchableOpacity>
   );
@@ -47,13 +60,21 @@ export default function KitabListScreen({ navigation }) {
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>📚 Daftar Kitab</Text>
       <FlatList
         data={kitabList}
         renderItem={renderItem}
-        keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+        keyExtractor={(item, index) => item.id_kitab?.toString() || index.toString()}
         contentContainerStyle={styles.listContainer}
       />
     </View>
@@ -87,6 +108,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
   },
+  cardImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -101,5 +128,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

@@ -1,127 +1,91 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  ActivityIndicator,
-  TouchableOpacity,
-  Linking
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, Button, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import axios from 'axios';
 
-export default function PromoScreen() {
-  const [promoList, setPromoList] = useState([]);
+export default function PromoScreen({ navigation }) {
+  const [promoData, setPromoData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     axios
-      .get('https://get.ichwanul.com/api/api.php/records/PromotionSlide?transform=1', {
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-          Accept: 'application/json'
-        }
+      .get('https://get.ichwanul.com/api/api.php/records/PromotionSlide?transform=1')
+      .then((response) => {
+        setPromoData(response.data.records); // Set the promo data from the API
       })
-      .then(res => {
-        setPromoList(res.data.records);
-        setLoading(false);
-      })
-      .catch(err => {
+      .catch((err) => {
+        setError('Failed to fetch promo data');
         console.error(err);
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, []);
 
-  const renderPromo = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => item.link && Linking.openURL(item.link)}
-    >
-      {item.image && (
-        <Image
-          source={{ uri: item.image }}
-          style={styles.promoImage}
-          resizeMode="cover"
-        />
-      )}
-      <View style={styles.textContainer}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardDesc} numberOfLines={3}>
-          {item.description || 'Deskripsi belum tersedia.'}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#00796b" />
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🔥 Promo Kitab Kuning</Text>
-      <FlatList
-        data={promoList}
-        renderItem={renderPromo}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
+    <ScrollView style={styles.container}>
+      <Button title="Back to Daftar Kitab" onPress={() => navigation.goBack()} />
+      {promoData.map((promo) => (
+        promo.status === 1 && ( // Hanya tampilkan promo dengan status 1
+          <View key={promo.id_img} style={styles.promoCard}>
+            <Image source={{ uri: promo.src_img }} style={styles.promoImage} />
+            <Text style={styles.promoText}>{promo.text_img}</Text>
+            <Button
+              title="Learn More"
+              onPress={() => navigation.navigate('WebView', { url: promo.url })} // Jika ada halaman WebView
+            />
+          </View>
+        )
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e6f2f2',
-    paddingTop: 10,
-  },
-  listContainer: {
     padding: 10,
+    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 15,
-    color: '#004d40',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    marginBottom: 15,
-    borderRadius: 12,
+  promoCard: {
+    marginBottom: 20,
+    borderRadius: 10,
     overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 10,
   },
   promoImage: {
     width: '100%',
-    height: 180,
+    height: 200,
+    borderRadius: 10,
   },
-  textContainer: {
-    padding: 12,
-  },
-  cardTitle: {
+  promoText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#00796b',
-    marginBottom: 5,
+    marginTop: 10,
+    textAlign: 'center',
   },
-  cardDesc: {
-    fontSize: 14,
-    color: '#555',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

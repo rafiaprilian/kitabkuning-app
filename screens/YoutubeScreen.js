@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 
-export default function YoutubeScreen() {
+export default function YoutubeScreen({ navigation }) {
   const [youtubeList, setYoutubeList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,10 +36,11 @@ export default function YoutubeScreen() {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => Linking.openURL(item.link)}
+      onPress={() => Linking.openURL(item.link_toko)} // Navigasi ke link YouTube playlist
     >
-      <Image source={{ uri: item.thumbnail }} style={styles.image} />
-      <Text style={styles.cardTitle}>{item.title}</Text>
+      <Image source={{ uri: item.logo_toko }} style={styles.image} />
+      <Text style={styles.cardTitle}>{item.nama_toko}</Text>
+      <Text style={styles.cardSubTitle}>{item.asal_toko}</Text>
     </TouchableOpacity>
   );
 
@@ -57,7 +58,7 @@ export default function YoutubeScreen() {
       <FlatList
         data={youtubeList}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id_toko.toString()}
         contentContainerStyle={styles.listContainer}
       />
     </View>
@@ -98,6 +99,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#00796b',
     marginTop: 10,
+  },
+  cardSubTitle: {
+    fontSize: 16,
+    color: '#555',
+    marginTop: 5,
   },
   listContainer: {
     padding: 10,
